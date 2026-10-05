@@ -317,16 +317,22 @@
     margin-right: auto;
   }
   .photo-card {
-    padding: 8px;
-    border-radius: 16px;
+    position: relative;
+    padding: 6px;
+    border-radius: 14px;
     background: linear-gradient(135deg, #ffd6e8 0%, #ff6bb0 55%, #b3006b 100%);
     box-shadow:
       0 0 20px rgba(255, 180, 220, 0.9),
       0 0 50px rgba(255, 46, 145, 0.5),
       inset 0 0 10px rgba(255, 255, 255, 0.4);
-    position: relative;
-    transition: transform 0.5s ease;
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
     animation: cardGlow 4s ease-in-out infinite;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
   }
   .photo-card .photo-num {
     position: absolute;
@@ -363,8 +369,9 @@
   .photo-card img {
     display: block;
     width: 100%;
-    height: auto;
-    border-radius: 10px;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 9px;
   }
   .photo-card::before,
   .photo-card::after {
@@ -375,6 +382,7 @@
     text-shadow: 0 0 12px rgba(255, 46, 145, 1);
     opacity: 0.9;
     animation: heartBeatSmall 2.4s ease-in-out infinite;
+    z-index: 2;
   }
   .photo-card::before { top: -10px; right: 6px; }
   .photo-card::after  { bottom: -10px; left: 6px; animation-delay: 1.2s; }
@@ -403,6 +411,108 @@
     padding: 20px 0;
     grid-column: 1 / -1;
   }
+
+  /* ===== ЛАЙТБОКС ===== */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 2, 6, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    padding: 20px;
+  }
+  .lightbox.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .lightbox-img-wrap {
+    position: relative;
+    max-width: 92vw;
+    max-height: 92vh;
+    transform: scale(0.6);
+    opacity: 0;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.45s ease;
+  }
+  .lightbox.open .lightbox-img-wrap {
+    transform: scale(1);
+    opacity: 1;
+  }
+  .lightbox-img-wrap img {
+    display: block;
+    max-width: 92vw;
+    max-height: 88vh;
+    width: auto;
+    height: auto;
+    border-radius: 16px;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 0 40px rgba(255, 255, 255, 0.8),
+      0 0 90px rgba(255, 46, 145, 1),
+      0 0 160px rgba(255, 46, 145, 0.7);
+    animation: lightboxGlow 2.6s ease-in-out infinite;
+  }
+  @keyframes lightboxGlow {
+    0%, 100% {
+      box-shadow: 0 0 40px rgba(255, 255, 255, 0.8),
+                  0 0 90px rgba(255, 46, 145, 1),
+                  0 0 160px rgba(255, 46, 145, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 55px rgba(255, 255, 255, 1),
+                  0 0 130px rgba(255, 46, 145, 1),
+                  0 0 220px rgba(255, 46, 145, 0.9);
+    }
+  }
+  .lightbox-num {
+    position: absolute;
+    top: -16px;
+    left: -16px;
+    z-index: 3;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+    font-weight: bold;
+    color: #4a0030;
+    background: linear-gradient(135deg, #ffd6e8, #ff6bb0);
+    border: 3px solid #fff0f6;
+    border-radius: 50%;
+    box-shadow:
+      0 0 20px rgba(255, 46, 145, 1),
+      0 0 50px rgba(255, 46, 145, 0.8);
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 4;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    background: rgba(74, 0, 48, 0.7);
+    color: #fff0f6;
+    font-size: 26px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(255, 46, 145, 0.9);
+    transition: transform 0.25s ease, background 0.25s ease;
+  }
+  .lightbox-close:hover { transform: scale(1.08); background: rgba(179, 0, 107, 0.9); }
+
   @media (max-width: 600px) {
     body { padding: 14px 12px 130px; align-items: flex-start; }
     #terminal { font-size: 13px; letter-spacing: 0.4px; line-height: 1.65; padding-bottom: 30px; }
@@ -430,6 +540,25 @@
     .we-photos { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; }
     .we-caption { font-size: 17px; letter-spacing: 2px; }
     .photo-card .photo-num { font-size: 13px; min-width: 28px; height: 28px; top: -10px; left: -6px; }
+    .lightbox-img-wrap img {
+      max-width: 94vw;
+      max-height: 82vh;
+      border-width: 2px;
+    }
+    .lightbox-num {
+      font-size: 16px;
+      min-width: 36px;
+      height: 36px;
+      top: -10px;
+      left: -10px;
+    }
+    .lightbox-close {
+      width: 42px;
+      height: 42px;
+      font-size: 22px;
+      top: 12px;
+      right: 12px;
+    }
   }
   @media (max-width: 400px) {
     .photo-wrap img { max-width: 260px; }
@@ -448,6 +577,14 @@
   <div class="round-hint next" id="nextHint">нажми для продолжения</div>
   <button class="back-button" id="backButton" title="Назад">←</button>
   <div class="round-hint back" id="backHint">нажми, чтобы вернуться</div>
+
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-img-wrap">
+      <div class="lightbox-num" id="lightboxNum">#1</div>
+      <img id="lightboxImg" src="" alt="Это мы">
+    </div>
+    <button class="lightbox-close" id="lightboxClose" title="Закрыть">×</button>
+  </div>
 
 <script>
 const START_DATE = new Date(2026, 8, 8); // ← поменяй на вашу дату
@@ -703,7 +840,6 @@ async function loadWeGallery() {
       return;
     }
 
-    // сортируем по id (если есть)
     list.sort((a, b) => {
       const ida = typeof a === 'string' ? 0 : (a.id || 0);
       const idb = typeof b === 'string' ? 0 : (b.id || 0);
@@ -731,12 +867,51 @@ async function loadWeGallery() {
       img.loading = 'lazy';
       img.onerror = () => { card.style.display = 'none'; };
       card.appendChild(img);
+
+      card.addEventListener('click', () => {
+        openLightbox(path + '?t=' + Date.now(), id);
+      });
+
       container.appendChild(card);
     }
   } catch (e) {
     container.innerHTML = '<div class="we-empty">скоро здесь появятся наши фото 💗</div>';
   }
 }
+
+const lightbox      = document.getElementById('lightbox');
+const lightboxImg   = document.getElementById('lightboxImg');
+const lightboxNum   = document.getElementById('lightboxNum');
+const lightboxClose = document.getElementById('lightboxClose');
+
+function openLightbox(src, id) {
+  lightboxImg.src = src;
+  if (id !== null && id !== undefined) {
+    lightboxNum.textContent = '#' + id;
+    lightboxNum.style.display = 'flex';
+  } else {
+    lightboxNum.style.display = 'none';
+  }
+  lightbox.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  lightbox.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { lightboxImg.src = ''; }, 400);
+}
+
+lightboxClose.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeLightbox();
+});
+lightbox.addEventListener('click', (e) => {
+  if (e.target === lightbox) closeLightbox();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox();
+});
 
 nextButton.addEventListener('click', async () => {
   runAbort = true; isRunning = false;
