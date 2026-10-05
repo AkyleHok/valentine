@@ -1,0 +1,754 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a0010">
+<title>Для моей любимой</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    overflow-x: hidden;
+    font-family: 'Courier New', monospace;
+  }
+  body {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px 20px 120px;
+    background: radial-gradient(circle at 50% 20%, #ff6bb0 0%, #ff2e91 25%, #b3006b 55%, #4a0030 80%, #1a0010 100%);
+    background-attachment: fixed;
+    position: relative;
+    transition: background 2s ease;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body.final-mode {
+    background: radial-gradient(circle at 50% 30%, #ffb8d9 0%, #ff6bb0 20%, #b3006b 55%, #4a0030 80%, #1a0010 100%);
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(10, 2, 6, 0.35) 0%, rgba(10, 2, 6, 0.7) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  #terminal {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    width: 100%;
+    color: #ffb8d9;
+    text-shadow: 0 0 10px rgba(255, 46, 145, 0.9), 0 0 20px rgba(255, 46, 145, 0.5);
+    font-size: 15px;
+    line-height: 1.6;
+    letter-spacing: 1px;
+    padding-bottom: 40px;
+    transition: opacity 0.85s ease;
+  }
+  .line {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    opacity: 0;
+    animation: fadeIn 0.4s forwards;
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .cursor::after {
+    content: '▊';
+    animation: blink 1s steps(2) infinite;
+    color: #fff;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .photo-wrap {
+    text-align: center;
+    margin: 22px 0;
+    opacity: 0;
+    animation: fadeIn 1s forwards;
+  }
+  .photo-wrap img {
+    max-width: 100%;
+    width: 320px;
+    height: auto;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.7),
+                0 0 60px rgba(255, 46, 145, 0.9),
+                0 0 100px rgba(255, 46, 145, 0.5);
+    display: inline-block;
+    animation: photoGlow 3s ease-in-out infinite;
+  }
+  @keyframes photoGlow {
+    0%, 100% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.7), 0 0 60px rgba(255, 46, 145, 0.9), 0 0 100px rgba(255, 46, 145, 0.5); }
+    50%      { box-shadow: 0 0 35px rgba(255, 255, 255, 1),   0 0 80px rgba(255, 46, 145, 1),   0 0 130px rgba(255, 46, 145, 0.8); }
+  }
+  .big-art {
+    font-size: 14px;
+    line-height: 1.15;
+    color: #ffffff;
+    text-shadow: 0 0 14px rgba(255, 46, 145, 1),
+                 0 0 30px rgba(255, 46, 145, 0.8);
+    white-space: pre;
+    text-align: center;
+    margin: 30px 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; filter: brightness(1); }
+    50%      { opacity: 0.95; filter: brightness(1.5); }
+  }
+  .heart-final {
+    font-size: 18px;
+    line-height: 1.1;
+    color: #ffffff;
+    text-shadow: 0 0 18px rgba(255, 46, 145, 1),
+                 0 0 40px rgba(255, 46, 145, 0.9),
+                 0 0 70px rgba(255, 46, 145, 0.6);
+    white-space: pre;
+    text-align: center;
+    margin: 24px 0;
+    animation: beat 1.3s ease-in-out infinite;
+  }
+  @keyframes beat {
+    0%, 100% { transform: scale(1); }
+    30%      { transform: scale(1.15); }
+    60%      { transform: scale(0.98); }
+  }
+  .signature {
+    text-align: right;
+    margin-top: 24px;
+    color: #ffd6e8;
+    font-style: italic;
+    text-shadow: 0 0 10px rgba(255, 46, 145, 0.9);
+    opacity: 0;
+    animation: fadeIn 1s 0.5s forwards;
+  }
+  .particle {
+    position: fixed;
+    color: #ffffff;
+    pointer-events: none;
+    z-index: 0;
+    text-shadow: 0 0 12px rgba(255, 46, 145, 1),
+                 0 0 25px rgba(255, 46, 145, 0.8);
+    animation: float linear infinite;
+    will-change: transform, opacity;
+  }
+  @keyframes float {
+    from { transform: translateY(100vh) scale(0.8); opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    to   { transform: translateY(-15vh) scale(1.2); opacity: 0; }
+  }
+  .next-button, .back-button {
+    position: fixed;
+    bottom: 22px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 230, 240, 0.9);
+    background: linear-gradient(135deg, #ffd6e8, #ff6bb0);
+    color: #4a0030;
+    font-family: 'Courier New', monospace;
+    font-size: 26px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 26px rgba(255, 46, 145, 0.9), 0 0 60px rgba(255, 46, 145, 0.6);
+    z-index: 90;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.6);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+    animation: nextFloat 3s ease-in-out infinite;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .next-button { right: 22px; }
+  .back-button { left: 22px; }
+  .next-button.show, .back-button.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+  }
+  @keyframes nextFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  .next-button:hover, .back-button:hover {
+    box-shadow: 0 0 40px rgba(255, 46, 145, 1), 0 0 90px rgba(255, 46, 145, 0.9);
+  }
+  .next-button:active, .back-button:active { transform: scale(0.94); }
+  .round-hint {
+    position: fixed;
+    z-index: 91;
+    bottom: 96px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #ffd6e8;
+    font-style: italic;
+    text-shadow: 0 0 8px rgba(255, 46, 145, 0.9);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease 0.3s;
+    white-space: nowrap;
+  }
+  .round-hint.show { opacity: 0.9; }
+  .round-hint.next { right: 22px; text-align: right; }
+  .round-hint.back { left: 22px; text-align: left; }
+  .final-screen {
+    display: none;
+    text-align: center;
+    padding: 40px 10px;
+  }
+  .final-screen.show { display: block; }
+  .final-title {
+    font-size: 18px;
+    color: #fff0f6;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+    text-shadow: 0 0 14px rgba(255, 46, 145, 1), 0 0 30px rgba(255, 46, 145, 0.8);
+    opacity: 0;
+    animation: fadeIn 1.4s ease-out forwards;
+  }
+  .final-title-line {
+    display: block;
+    font-size: 14px;
+    color: #ffd6e8;
+    margin-top: 8px;
+    letter-spacing: 1px;
+    font-style: italic;
+  }
+  .days-counter {
+    font-size: 72px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 0 24px rgba(255, 46, 145, 1),
+                 0 0 60px rgba(255, 46, 145, 0.9),
+                 0 0 120px rgba(255, 46, 145, 0.7);
+    letter-spacing: 2px;
+    line-height: 1;
+    margin: 20px 0 6px;
+    opacity: 0;
+    animation: counterIn 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards,
+               counterPulse 3s ease-in-out 2s infinite;
+    display: inline-block;
+  }
+  @keyframes counterIn {
+    0%   { opacity: 0; transform: scale(0.5); }
+    60%  { opacity: 1; transform: scale(1.08); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes counterPulse {
+    0%, 100% { text-shadow: 0 0 24px rgba(255, 46, 145, 1), 0 0 60px rgba(255, 46, 145, 0.9), 0 0 120px rgba(255, 46, 145, 0.7); }
+    50%      { text-shadow: 0 0 34px rgba(255, 180, 220, 1), 0 0 90px rgba(255, 46, 145, 1), 0 0 160px rgba(255, 46, 145, 0.9); }
+  }
+  .days-label {
+    font-size: 16px;
+    color: #ffd6e8;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeIn 1.4s ease-out 0.8s forwards;
+  }
+  .sub-counters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 30px;
+  }
+  .sub-counter {
+    flex: 1 1 140px;
+    max-width: 180px;
+    padding: 16px 10px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(255, 46, 145, 0.5);
+    background: rgba(74, 0, 48, 0.5);
+    box-shadow: 0 0 20px rgba(255, 46, 145, 0.3) inset, 0 0 18px rgba(255, 46, 145, 0.25);
+    opacity: 0;
+    animation: fadeIn 1.4s ease-out forwards;
+  }
+  .sub-counter:nth-child(1) { animation-delay: 1.1s; }
+  .sub-counter:nth-child(2) { animation-delay: 1.3s; }
+  .sub-counter:nth-child(3) { animation-delay: 1.5s; }
+  .sub-counter:nth-child(4) { animation-delay: 1.7s; }
+  .sub-value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 0 14px rgba(255, 46, 145, 1), 0 0 30px rgba(255, 46, 145, 0.7);
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+  .sub-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #ffd6e8;
+    text-transform: uppercase;
+  }
+  .final-quote {
+    margin-top: 50px;
+    font-size: 15px;
+    font-style: italic;
+    color: #ffe0ee;
+    line-height: 1.8;
+    text-shadow: 0 0 12px rgba(255, 46, 145, 0.9);
+    opacity: 0;
+    animation: fadeIn 1.6s ease-out 1.8s forwards;
+  }
+  .we-block {
+    margin-top: 55px;
+    opacity: 0;
+    animation: fadeIn 1.8s ease-out 2.2s forwards;
+  }
+  .we-photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+    max-width: 620px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .photo-card {
+    padding: 8px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #ffd6e8 0%, #ff6bb0 55%, #b3006b 100%);
+    box-shadow:
+      0 0 20px rgba(255, 180, 220, 0.9),
+      0 0 50px rgba(255, 46, 145, 0.5),
+      inset 0 0 10px rgba(255, 255, 255, 0.4);
+    position: relative;
+    transition: transform 0.5s ease;
+    animation: cardGlow 4s ease-in-out infinite;
+  }
+  @keyframes cardGlow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(255, 180, 220, 0.9), 0 0 50px rgba(255, 46, 145, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 34px rgba(255, 210, 235, 1), 0 0 80px rgba(255, 46, 145, 0.75), inset 0 0 14px rgba(255, 255, 255, 0.6);
+    }
+  }
+  .photo-card:hover { transform: scale(1.04); }
+  .photo-card img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+  }
+  .photo-card::before,
+  .photo-card::after {
+    content: '♥';
+    position: absolute;
+    color: #fff4e0;
+    font-size: 16px;
+    text-shadow: 0 0 12px rgba(255, 46, 145, 1);
+    opacity: 0.9;
+    animation: heartBeatSmall 2.4s ease-in-out infinite;
+  }
+  .photo-card::before { top: -10px; left: 6px; }
+  .photo-card::after  { bottom: -10px; right: 6px; animation-delay: 1.2s; }
+  @keyframes heartBeatSmall {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.25); }
+  }
+  .we-caption {
+    margin-top: 8px;
+    font-size: 20px;
+    font-style: italic;
+    color: #fff0f6;
+    letter-spacing: 3px;
+    text-shadow: 0 0 14px rgba(255, 46, 145, 1), 0 0 30px rgba(255, 46, 145, 0.8);
+  }
+  .we-caption-heart {
+    display: inline-block;
+    animation: heartBeatSmall 1.8s ease-in-out infinite;
+  }
+  .we-empty {
+    text-align: center;
+    color: #ffd6e8;
+    font-style: italic;
+    font-size: 14px;
+    opacity: 0.85;
+    padding: 20px 0;
+    grid-column: 1 / -1;
+  }
+  @media (max-width: 600px) {
+    body { padding: 14px 12px 130px; align-items: flex-start; }
+    #terminal { font-size: 13px; letter-spacing: 0.4px; line-height: 1.65; padding-bottom: 30px; }
+    .photo-wrap img { width: 100%; max-width: 300px; }
+    .big-art { font-size: 8px; line-height: 1.15; margin: 24px 0; }
+    .heart-final { font-size: 11px; }
+    .next-button, .back-button {
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+    .next-button { right: 16px; }
+    .back-button { left: 16px; }
+    .round-hint { font-size: 9px; }
+    .round-hint.next { right: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+    .round-hint.back { left: 16px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+    .days-counter { font-size: 52px; }
+    .days-label { font-size: 13px; letter-spacing: 2px; }
+    .sub-counter { flex: 1 1 100px; max-width: 130px; padding: 12px 8px; }
+    .sub-value { font-size: 18px; }
+    .sub-label { font-size: 10px; letter-spacing: 1px; }
+    .final-title { font-size: 15px; }
+    .final-quote { font-size: 13.5px; margin-top: 36px; }
+    .we-photos { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+    .we-caption { font-size: 17px; letter-spacing: 2px; }
+  }
+  @media (max-width: 400px) {
+    .photo-wrap img { max-width: 260px; }
+    .big-art { font-size: 6.5px; }
+    .heart-final { font-size: 9.5px; }
+    #terminal { font-size: 12px; }
+    .days-counter { font-size: 44px; }
+    .we-caption { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+  <div id="terminal"></div>
+  <button class="next-button" id="nextButton" title="Дальше">→</button>
+  <div class="round-hint next" id="nextHint">нажми для продолжения</div>
+  <button class="back-button" id="backButton" title="Назад">←</button>
+  <div class="round-hint back" id="backHint">нажми, чтобы вернуться</div>
+
+<script>
+const START_DATE = new Date(2026, 8, 8); // ← поменяй на вашу дату
+
+const terminal = document.getElementById('terminal');
+const nextButton = document.getElementById('nextButton');
+const backButton = document.getElementById('backButton');
+const nextHint = document.getElementById('nextHint');
+const backHint = document.getElementById('backHint');
+
+const letterI = `
+██╗
+██║
+██║
+██║
+██║
+╚═╝
+`;
+const heartFinal = `
+♥♥♥   ♥♥♥
+♥♥♥♥♥ ♥♥♥♥♥
+♥♥♥♥♥♥♥♥♥♥♥♥♥
+♥♥♥♥♥♥♥♥♥♥♥♥♥
+♥♥♥♥♥♥♥♥♥♥♥
+♥♥♥♥♥♥♥♥♥
+♥♥♥♥♥♥♥
+♥♥♥♥♥
+♥♥♥
+♥
+`;
+const wordYou = `
+██╗   ██╗ ██████╗ ██╗   ██╗
+╚██╗ ██╔╝██╔═══██╗██║   ██║
+╚████╔╝ ██║   ██║██║   ██║
+╚██╔╝  ██║   ██║██║   ██║
+██║   ╚██████╔╝╚██████╔╝
+╚═╝    ╚═════╝  ╚═════╝
+`;
+const script = [
+  { type: 'type', text: '> инициализация...', speed: 40 },
+  { type: 'type', text: '> поиск получателя....... найдено', speed: 30 },
+  { type: 'type', text: '> Получатель: Самая красивая девочка по имени Полина', speed: 35 },
+  { type: 'type', text: '> сканирование сердечка... 100%', speed: 25 },
+  { type: 'wait', ms: 500 },
+  { type: 'photo', src: 'photo1.jpg' },
+  { type: 'wait', ms: 700 },
+  { type: 'type', text: '', speed: 0 },
+  { type: 'type', text: '> привет, моя любимая 💗', speed: 55 },
+  { type: 'wait', ms: 500 },
+  { type: 'type', text: '> есть слова, которые я хочу сказать не шёпотом,', speed: 35 },
+  { type: 'type', text: '> а так, чтобы ты точно услышала.', speed: 35 },
+  { type: 'wait', ms: 400 },
+  { type: 'type', text: '> ты — самое нежное, что случилось со мной.', speed: 45 },
+  { type: 'type', text: '> твой смех — моя любимая мелодия,', speed: 35 },
+  { type: 'type', text: '> твои глаза — моё самое тёплое место.', speed: 35 },
+  { type: 'wait', ms: 500 },
+  { type: 'photo', src: 'photo2.jpg' },
+  { type: 'wait', ms: 700 },
+  { type: 'type', text: '> когда ты рядом, мир становится тише и добрее.', speed: 35 },
+  { type: 'type', text: '> а когда тебя нет — я считаю минуты до встречи.', speed: 35 },
+  { type: 'wait', ms: 600 },
+  { type: 'type', text: '> ты моя Полина. моя Кися. моя вселенная.', speed: 50 },
+  { type: 'wait', ms: 900 },
+  { type: 'art', which: 'I' },
+  { type: 'wait', ms: 700 },
+  { type: 'heart' },
+  { type: 'wait', ms: 700 },
+  { type: 'art', which: 'YOU' },
+  { type: 'wait', ms: 700 },
+  { type: 'sign' }
+];
+
+let vibrationTimer = null;
+function startVibration() {
+  if (!('vibrate' in navigator)) return;
+  const tick = () => { try { navigator.vibrate(120); } catch (e) {} };
+  tick();
+  if (vibrationTimer) clearInterval(vibrationTimer);
+  vibrationTimer = setInterval(tick, 3000);
+}
+function stopVibration() {
+  if (vibrationTimer) { clearInterval(vibrationTimer); vibrationTimer = null; }
+  try { if ('vibrate' in navigator) navigator.vibrate(0); } catch (e) {}
+}
+let userScrolledAway = false;
+function isNearBottom() {
+  const scrolled = window.scrollY + window.innerHeight;
+  const total = document.documentElement.scrollHeight;
+  return total - scrolled < 120;
+}
+window.addEventListener('scroll', () => { userScrolledAway = !isNearBottom(); }, { passive: true });
+function autoScroll() {
+  if (userScrolledAway) return;
+  window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+}
+async function typeText(text, speed, el) {
+  for (let i = 0; i < text.length; i++) {
+    if (runAbort) return;
+    el.textContent += text[i];
+    autoScroll();
+    await sleep(speed + Math.random() * 20);
+  }
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+let isRunning = false;
+let runAbort = false;
+async function run() {
+  if (isRunning) return;
+  isRunning = true;
+  runAbort = false;
+  for (const step of script) {
+    if (runAbort) break;
+    if (step.type === 'type') {
+      const el = document.createElement('div');
+      el.className = 'line cursor';
+      terminal.appendChild(el);
+      await typeText(step.text, step.speed, el);
+      if (runAbort) break;
+      el.classList.remove('cursor');
+      await sleep(120);
+    } else if (step.type === 'wait') {
+      await sleep(step.ms);
+    } else if (step.type === 'photo') {
+      if (runAbort) break;
+      const wrap = document.createElement('div');
+      wrap.className = 'photo-wrap';
+      const img = document.createElement('img');
+      img.src = step.src; img.alt = '💗';
+      wrap.appendChild(img); terminal.appendChild(wrap);
+      autoScroll(); await sleep(400);
+    } else if (step.type === 'art') {
+      if (runAbort) break;
+      const el = document.createElement('pre');
+      el.className = 'big-art';
+      el.textContent = step.which === 'I' ? letterI : wordYou;
+      terminal.appendChild(el);
+      autoScroll(); await sleep(400);
+    } else if (step.type === 'heart') {
+      if (runAbort) break;
+      const el = document.createElement('pre');
+      el.className = 'heart-final';
+      el.textContent = heartFinal;
+      terminal.appendChild(el);
+      autoScroll(); await sleep(600);
+    } else if (step.type === 'sign') {
+      if (runAbort) break;
+      const el = document.createElement('div');
+      el.className = 'signature';
+      el.textContent = '— от того, кто любит тебя больше всех 💗';
+      terminal.appendChild(el);
+      autoScroll();
+    }
+  }
+  isRunning = false;
+}
+
+function animateNumber(el, value) {
+  const str = value.toLocaleString('ru-RU');
+  el.innerHTML = '';
+  let i = 0;
+  for (const ch of str) {
+    if (ch === ' ' || ch === '\u00A0') {
+      const sep = document.createElement('span'); sep.textContent = ' '; el.appendChild(sep);
+    } else {
+      const roll = document.createElement('span');
+      roll.style.display = 'inline-block';
+      roll.style.opacity = '0';
+      roll.style.transform = 'translateY(40%)';
+      roll.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+      roll.style.transitionDelay = (i * 0.06) + 's';
+      roll.textContent = ch;
+      el.appendChild(roll);
+      requestAnimationFrame(() => { roll.style.opacity = '1'; roll.style.transform = 'translateY(0)'; });
+      i++;
+    }
+  }
+}
+
+let counterInterval = null;
+function renderFinalScreen() {
+  document.body.classList.add('final-mode');
+  const screen = document.createElement('div');
+  screen.className = 'final-screen show';
+  const now = new Date();
+  const diffMs = now - START_DATE;
+  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const years = Math.floor(totalDays / 365.25);
+  const months = Math.floor((totalDays - years * 365.25) / 30.44);
+  screen.innerHTML = `
+    <div class="final-title">
+      сколько мы уже вместе
+      <span class="final-title-line">с самого первого дня и до этого момента</span>
+    </div>
+    <div class="days-counter" id="daysCounter"></div>
+    <div class="days-label">дней</div>
+    <div class="sub-counters">
+      <div class="sub-counter">
+        <div class="sub-value">${years} ${years === 1 ? 'год' : (years >= 2 && years <= 4 ? 'года' : 'лет')} ${months} мес</div>
+        <div class="sub-label">точный стаж</div>
+      </div>
+      <div class="sub-counter"><div class="sub-value" id="hoursCounter"></div><div class="sub-label">часов рядом</div></div>
+      <div class="sub-counter"><div class="sub-value" id="minutesCounter"></div><div class="sub-label">минут любви</div></div>
+      <div class="sub-counter"><div class="sub-value" id="secondsCounter"></div><div class="sub-label">секунд, и всё ещё считаю</div></div>
+    </div>
+    <div class="final-quote">
+      «и каждая из этих минут —<br>была бы неполной без тебя.<br>спасибо, что ты рядом 💗»
+    </div>
+    <div class="we-block">
+      <div class="we-photos" id="weGallery"></div>
+      <div class="we-caption">Это мы <span class="we-caption-heart">💗</span></div>
+    </div>
+  `;
+  terminal.appendChild(screen);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => {
+    animateNumber(document.getElementById('daysCounter'), totalDays);
+    animateNumber(document.getElementById('hoursCounter'), totalHours);
+    animateNumber(document.getElementById('minutesCounter'), totalMinutes);
+    animateNumber(document.getElementById('secondsCounter'), totalSeconds);
+  }, 200);
+  if (counterInterval) clearInterval(counterInterval);
+  counterInterval = setInterval(() => {
+    const ms = Date.now() - START_DATE.getTime();
+    const d = document.getElementById('daysCounter');
+    const h = document.getElementById('hoursCounter');
+    const m = document.getElementById('minutesCounter');
+    const s = document.getElementById('secondsCounter');
+    if (d) d.textContent = Math.floor(ms / (1000 * 60 * 60 * 24)).toLocaleString('ru-RU');
+    if (h) h.textContent = Math.floor(ms / (1000 * 60 * 60)).toLocaleString('ru-RU');
+    if (m) m.textContent = Math.floor(ms / (1000 * 60)).toLocaleString('ru-RU');
+    if (s) s.textContent = Math.floor(ms / 1000).toLocaleString('ru-RU');
+  }, 1000);
+  loadWeGallery();
+}
+
+async function loadWeGallery() {
+  const container = document.getElementById('weGallery');
+  if (!container) return;
+  try {
+    const res = await fetch('photos.json?t=' + Date.now());
+    if (!res.ok) throw new Error('no json');
+    const data = await res.json();
+    const list = Array.isArray(data.photos) ? data.photos : [];
+    if (list.length === 0) {
+      container.innerHTML = '<div class="we-empty">скоро здесь появятся наши фото 💗</div>';
+      return;
+    }
+    container.innerHTML = '';
+    for (const src of list) {
+      const card = document.createElement('div');
+      card.className = 'photo-card';
+      const img = document.createElement('img');
+      img.src = src + '?t=' + Date.now();
+      img.alt = 'Это мы';
+      img.loading = 'lazy';
+      img.onerror = () => { card.style.display = 'none'; };
+      card.appendChild(img);
+      container.appendChild(card);
+    }
+  } catch (e) {
+    container.innerHTML = '<div class="we-empty">скоро здесь появятся наши фото 💗</div>';
+  }
+}
+
+nextButton.addEventListener('click', async () => {
+  runAbort = true; isRunning = false;
+  nextButton.classList.remove('show'); nextHint.classList.remove('show');
+  const oldScreen = terminal.querySelector('.final-screen');
+  if (oldScreen) oldScreen.remove();
+  if (counterInterval) { clearInterval(counterInterval); counterInterval = null; }
+  terminal.style.opacity = '0';
+  await sleep(850);
+  terminal.innerHTML = '';
+  terminal.style.opacity = '1';
+  userScrolledAway = false;
+  renderFinalScreen();
+  backButton.classList.add('show');
+  backHint.classList.add('show');
+});
+
+backButton.addEventListener('click', async () => {
+  backButton.classList.remove('show'); backHint.classList.remove('show');
+  terminal.style.opacity = '0';
+  await sleep(850);
+  document.body.classList.remove('final-mode');
+  if (counterInterval) { clearInterval(counterInterval); counterInterval = null; }
+  terminal.innerHTML = '';
+  terminal.style.opacity = '1';
+  userScrolledAway = false;
+  run();
+  nextButton.classList.add('show'); nextHint.classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+function spawnParticles() {
+  const chars = ['♥', '❤', '♡'];
+  setInterval(() => {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = chars[Math.floor(Math.random() * chars.length)];
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (4 + Math.random() * 4) + 's';
+    p.style.fontSize = (16 + Math.random() * 26) + 'px';
+    p.style.opacity = 0.5 + Math.random() * 0.5;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 9000);
+  }, 180);
+}
+run();
+spawnParticles();
+nextButton.classList.add('show');
+nextHint.classList.add('show');
+function armVibrationOnFirstTouch() {
+  const handler = () => {
+    startVibration();
+    document.removeEventListener('touchstart', handler);
+    document.removeEventListener('click', handler);
+  };
+  document.addEventListener('touchstart', handler, { once: true, passive: true });
+  document.addEventListener('click', handler, { once: true });
+}
+armVibrationOnFirstTouch();
+</script>
+</body>
+</html>
