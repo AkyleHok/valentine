@@ -1,8 +1,4 @@
 {
-  "photos": [
-    { "id": 1, "path": "us/001.jpg" },
-    { "id": 2, "path": "us/002.jpg" },
-    { "id": 7, "path": "us/007.jpg" }
-  ],
-  "next_id": 8
+  "photos": [],
+  "next_id": 1
 }
