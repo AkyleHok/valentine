@@ -309,8 +309,8 @@
   }
   .we-photos {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
     margin-bottom: 20px;
     max-width: 620px;
     margin-left: auto;
@@ -330,9 +330,9 @@
     animation: cardGlow 4s ease-in-out infinite;
     cursor: pointer;
     overflow: visible;
-    display: inline-block;
+    display: block;
     line-height: 0;
-    align-self: start;
+    width: 100%;
   }
   .photo-card .photo-num {
     position: absolute;
@@ -425,7 +425,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.4s ease;
-    padding: 20px;
     overflow: hidden;
   }
   .lightbox.open {
@@ -433,51 +432,37 @@
     pointer-events: auto;
   }
 
-  /* ===== СВЕТЯЩАЯСЯ ПОЛОСКА ПО КРАЯМ → СЕРДЦЕ ===== */
+  /* ===== СЛЕД ПО КРАЯМ → СЕРДЦЕ ===== */
   .lightbox-trace {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     z-index: 1;
     pointer-events: none;
+    display: block;
   }
   .lightbox-trace path {
     fill: none;
     stroke: #ff6bb0;
-    stroke-width: 3;
     stroke-linecap: round;
     stroke-linejoin: round;
     filter: drop-shadow(0 0 6px rgba(255, 46, 145, 1))
             drop-shadow(0 0 16px rgba(255, 46, 145, 0.9))
             drop-shadow(0 0 30px rgba(255, 46, 145, 0.6));
-    stroke-dasharray: var(--len, 4000);
-    stroke-dashoffset: var(--len, 4000);
     opacity: 0;
   }
   .lightbox.open .lightbox-trace path {
     opacity: 1;
-    animation: traceRun 4.5s ease-in-out forwards;
+    animation: traceRun 4.5s ease-in-out infinite;
   }
   @keyframes traceRun {
-    0% {
-      stroke-dashoffset: var(--len, 4000);
-      opacity: 0;
-    }
-    10% {
-      opacity: 1;
-    }
-    75% {
-      stroke-dashoffset: 0;
-      opacity: 1;
-    }
-    90% {
-      opacity: 0.7;
-    }
-    100% {
-      stroke-dashoffset: 0;
-      opacity: 0;
-    }
+    0%   { stroke-dashoffset: var(--len, 4000); opacity: 0; }
+    10%  { opacity: 1; }
+    75%  { stroke-dashoffset: 0; opacity: 1; }
+    90%  { opacity: 0.7; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
   }
 
   .lightbox-img-wrap {
@@ -586,7 +571,7 @@
     .sub-label { font-size: 10px; letter-spacing: 1px; }
     .final-title { font-size: 15px; }
     .final-quote { font-size: 13.5px; margin-top: 36px; }
-    .we-photos { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; }
+    .we-photos { grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .we-caption { font-size: 17px; letter-spacing: 2px; }
     .photo-card .photo-num { font-size: 13px; min-width: 28px; height: 28px; top: -10px; left: -6px; }
     .lightbox-img-wrap img {
@@ -628,7 +613,7 @@
   <div class="round-hint back" id="backHint">нажми, чтобы вернуться</div>
 
   <div class="lightbox" id="lightbox">
-    <svg class="lightbox-trace" id="lightboxTrace" preserveAspectRatio="none">
+    <svg class="lightbox-trace" id="lightboxTrace">
       <path id="tracePath" d=""></path>
     </svg>
     <div class="lightbox-img-wrap">
@@ -639,7 +624,7 @@
   </div>
 
 <script>
-const START_DATE = new Date(2026, 8, 8); // ← поменяй на вашу дату
+const START_DATE = new Date(2026, 8, 8); // 8 сентября 2026
 
 const terminal = document.getElementById('terminal');
 const nextButton = document.getElementById('nextButton');
@@ -825,10 +810,10 @@ function renderFinalScreen() {
   screen.className = 'final-screen show';
   const now = new Date();
   const diffMs = now - START_DATE;
-  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const totalMinutes = Math.floor(diffMs / (1000 * 60));
-  const totalSeconds = Math.floor(diffMs / 1000);
+  const totalDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  const totalHours = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60)));
+  const totalMinutes = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+  const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
   const years = Math.floor(totalDays / 365.25);
   const months = Math.floor((totalDays - years * 365.25) / 30.44);
   screen.innerHTML = `
@@ -865,7 +850,7 @@ function renderFinalScreen() {
   }, 200);
   if (counterInterval) clearInterval(counterInterval);
   counterInterval = setInterval(() => {
-    const ms = Date.now() - START_DATE.getTime();
+    const ms = Math.max(0, Date.now() - START_DATE.getTime());
     const d = document.getElementById('daysCounter');
     const h = document.getElementById('hoursCounter');
     const m = document.getElementById('minutesCounter');
@@ -937,58 +922,58 @@ const lightboxImg   = document.getElementById('lightboxImg');
 const lightboxNum   = document.getElementById('lightboxNum');
 const lightboxClose = document.getElementById('lightboxClose');
 const tracePath     = document.getElementById('tracePath');
+const traceSvg      = document.getElementById('lightboxTrace');
 
 function buildHeartTrace() {
-  // Рисуем путь: обводим края экрана и внизу сворачиваем в сердце.
-  // Используем нормализованные координаты viewBox 0 0 1000 1000.
-  // Форма: старт сверху слева → вправо → вниз → влево → вверх → ... → сердце внизу.
-  const w = 1000, h = 1000;
-  const m = 40; // отступ от края
+  // Используем реальные размеры окна — путь точно совпадает с краями экрана
+  const w = window.innerWidth;
+  const h = window.innerHeight;
 
-  // Размер сердца (внизу по центру)
-  const heartW = 260;
-  const heartH = 220;
+  traceSvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  traceSvg.setAttribute('preserveAspectRatio', 'none');
+  traceSvg.setAttribute('width', w);
+  traceSvg.setAttribute('height', h);
+
+  const m = 14;                // отступ от края
+  const heartW = Math.min(280, w * 0.45);
+  const heartH = heartW * 0.9;
   const cx = w / 2;
-  const cy = h - 140;
+  const cy = h - 80;           // центр сердца чуть выше низа
 
-  // Классический путь сердца (две дуги сверху + острие снизу)
-  const heartPath = `
-    M ${cx} ${cy + heartH/2}
-    C ${cx - heartW/2} ${cy + heartH/6},
-      ${cx - heartW/2} ${cy - heartH/2},
-      ${cx} ${cy - heartH/6}
-    C ${cx + heartW/2} ${cy - heartH/2},
-      ${cx + heartW/2} ${cy + heartH/6},
-      ${cx} ${cy + heartH/2}
-    Z
-  `;
+  // Путь по краям: слева-сверху → вправо → вниз → к сердцу → обводим сердце
+  const hx = heartW / 2;
+  const hy = heartH / 2;
 
-  // Путь-обводка по краям, который внизу "входит" в сердце
-  // Начинаем слева сверху, идём вправо, вниз, влево, вверх и по центру вниз к сердцу
   const d = `
     M ${m} ${m}
     L ${w - m} ${m}
     L ${w - m} ${h - m}
-    L ${w / 2 + heartW/2 + 20} ${h - m}
-    L ${w / 2 + heartW/2 + 20} ${cy + heartH/2 + 40}
-    ${heartPath}
-    M ${m} ${m}
+    L ${cx + hx + 20} ${h - m}
+    L ${cx + hx + 20} ${cy - hy + 10}
+    C ${cx + hx} ${cy - hy - hy * 0.9},
+      ${cx + hx * 0.55} ${cy - hy - hy * 1.2},
+      ${cx} ${cy - hy * 0.5}
+    C ${cx - hx * 0.55} ${cy - hy - hy * 1.2},
+      ${cx - hx} ${cy - hy - hy * 0.9},
+      ${cx - hx - 20} ${cy - hy + 10}
+    L ${cx - hx - 20} ${h - m}
     L ${m} ${h - m}
-    L ${w / 2 - heartW/2 - 20} ${h - m}
-    L ${w / 2 - heartW/2 - 20} ${cy + heartH/2 + 40}
+    Z
   `;
 
   tracePath.setAttribute('d', d);
 
-  // Считаем длину пути и ставим dasharray
   try {
     const len = tracePath.getTotalLength();
     tracePath.style.setProperty('--len', len);
     tracePath.style.strokeDasharray = len;
     tracePath.style.strokeDashoffset = len;
+    tracePath.style.strokeWidth = Math.max(2, Math.min(4, w / 400));
   } catch (e) {
-    // fallback
-    tracePath.style.setProperty('--len', 5000);
+    tracePath.style.setProperty('--len', 4000);
+    tracePath.style.strokeDasharray = 4000;
+    tracePath.style.strokeDashoffset = 4000;
+    tracePath.style.strokeWidth = 3;
   }
 }
 
@@ -1000,13 +985,12 @@ function openLightbox(src, id) {
   } else {
     lightboxNum.style.display = 'none';
   }
+  // Сначала строим путь под текущий размер окна, потом открываем
+  buildHeartTrace();
   lightbox.classList.add('open');
   document.body.style.overflow = 'hidden';
-
-  // Перестраиваем путь под текущие размеры экрана
-  requestAnimationFrame(() => {
-    buildHeartTrace();
-  });
+  // Пересчитываем после перехода — на случай изменения размеров
+  requestAnimationFrame(() => buildHeartTrace());
 }
 
 function closeLightbox() {
@@ -1027,6 +1011,9 @@ document.addEventListener('keydown', (e) => {
 });
 window.addEventListener('resize', () => {
   if (lightbox.classList.contains('open')) buildHeartTrace();
+});
+window.addEventListener('orientationchange', () => {
+  if (lightbox.classList.contains('open')) setTimeout(buildHeartTrace, 200);
 });
 
 /* ===== КНОПКИ ===== */
