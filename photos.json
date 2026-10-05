@@ -1,4 +1,4 @@
 {
-  "photos": [],
-  "next_id": 1
+  "photos": [{ "id": 1, "path": "us/001.jpg" }],
+  "next_id": 2
 }
