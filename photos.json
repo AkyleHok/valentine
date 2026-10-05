@@ -1,4 +1,9 @@
 {
-  "photos": [],
-  "next_id": 2
+  "photos": [
+    {
+      "id": 2,
+      "path": "us/002.jpg"
+    }
+  ],
+  "next_id": 3
 }
