@@ -23,7 +23,11 @@
     {
       "id": 7,
       "path": "us/007.jpg"
+    },
+    {
+      "id": 8,
+      "path": "us/008.jpg"
     }
   ],
-  "next_id": 8
+  "next_id": 9
 }
