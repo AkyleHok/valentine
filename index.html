@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -310,7 +310,7 @@
   .we-photos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 14px;
+    gap: 20px;
     margin-bottom: 20px;
     max-width: 620px;
     margin-left: auto;
@@ -327,6 +327,29 @@
     position: relative;
     transition: transform 0.5s ease;
     animation: cardGlow 4s ease-in-out infinite;
+  }
+  .photo-card .photo-num {
+    position: absolute;
+    top: -12px;
+    left: -8px;
+    z-index: 2;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    font-weight: bold;
+    color: #4a0030;
+    background: linear-gradient(135deg, #ffd6e8, #ff6bb0);
+    border: 2px solid #fff0f6;
+    border-radius: 50%;
+    box-shadow:
+      0 0 14px rgba(255, 46, 145, 1),
+      0 0 30px rgba(255, 46, 145, 0.7);
+    text-shadow: none;
   }
   @keyframes cardGlow {
     0%, 100% {
@@ -353,8 +376,8 @@
     opacity: 0.9;
     animation: heartBeatSmall 2.4s ease-in-out infinite;
   }
-  .photo-card::before { top: -10px; left: 6px; }
-  .photo-card::after  { bottom: -10px; right: 6px; animation-delay: 1.2s; }
+  .photo-card::before { top: -10px; right: 6px; }
+  .photo-card::after  { bottom: -10px; left: 6px; animation-delay: 1.2s; }
   @keyframes heartBeatSmall {
     0%, 100% { transform: scale(1); }
     50%      { transform: scale(1.25); }
@@ -404,8 +427,9 @@
     .sub-label { font-size: 10px; letter-spacing: 1px; }
     .final-title { font-size: 15px; }
     .final-quote { font-size: 13.5px; margin-top: 36px; }
-    .we-photos { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+    .we-photos { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; }
     .we-caption { font-size: 17px; letter-spacing: 2px; }
+    .photo-card .photo-num { font-size: 13px; min-width: 28px; height: 28px; top: -10px; left: -6px; }
   }
   @media (max-width: 400px) {
     .photo-wrap img { max-width: 260px; }
@@ -414,6 +438,7 @@
     #terminal { font-size: 12px; }
     .days-counter { font-size: 44px; }
     .we-caption { font-size: 15px; }
+    .photo-card .photo-num { font-size: 12px; min-width: 26px; height: 26px; }
   }
 </style>
 </head>
@@ -507,6 +532,7 @@ function stopVibration() {
   if (vibrationTimer) { clearInterval(vibrationTimer); vibrationTimer = null; }
   try { if ('vibrate' in navigator) navigator.vibrate(0); } catch (e) {}
 }
+
 let userScrolledAway = false;
 function isNearBottom() {
   const scrolled = window.scrollY + window.innerHeight;
@@ -518,6 +544,7 @@ function autoScroll() {
   if (userScrolledAway) return;
   window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
 }
+
 async function typeText(text, speed, el) {
   for (let i = 0; i < text.length; i++) {
     if (runAbort) return;
@@ -670,16 +697,36 @@ async function loadWeGallery() {
     if (!res.ok) throw new Error('no json');
     const data = await res.json();
     const list = Array.isArray(data.photos) ? data.photos : [];
+
     if (list.length === 0) {
       container.innerHTML = '<div class="we-empty">скоро здесь появятся наши фото 💗</div>';
       return;
     }
+
+    // сортируем по id (если есть)
+    list.sort((a, b) => {
+      const ida = typeof a === 'string' ? 0 : (a.id || 0);
+      const idb = typeof b === 'string' ? 0 : (b.id || 0);
+      return ida - idb;
+    });
+
     container.innerHTML = '';
-    for (const src of list) {
+    for (const item of list) {
+      const path = typeof item === 'string' ? item : item.path;
+      const id   = typeof item === 'string' ? null : item.id;
+
       const card = document.createElement('div');
       card.className = 'photo-card';
+
+      if (id !== null && id !== undefined) {
+        const num = document.createElement('div');
+        num.className = 'photo-num';
+        num.textContent = '#' + id;
+        card.appendChild(num);
+      }
+
       const img = document.createElement('img');
-      img.src = src + '?t=' + Date.now();
+      img.src = path + '?t=' + Date.now();
       img.alt = 'Это мы';
       img.loading = 'lazy';
       img.onerror = () => { card.style.display = 'none'; };
