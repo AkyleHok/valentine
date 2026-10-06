@@ -307,7 +307,8 @@
     opacity: 0;
     animation: fadeIn 1.8s ease-out 2.2s forwards;
   }
-  /* ===== ПЛОТНАЯ СЕТКА: фото одной высоты, без больших пропусков ===== */
+
+  /* ===== СЕТКА ФОТО — фиксированная высота ячеек, плотно ===== */
   .we-photos {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -336,6 +337,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    min-height: 90px;
   }
   .photo-card .photo-num {
     position: absolute;
@@ -375,6 +378,7 @@
     height: 100%;
     object-fit: cover;
     border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
   }
   .photo-card::before,
   .photo-card::after {
@@ -437,7 +441,7 @@
     pointer-events: auto;
   }
 
-  /* ===== НЕОНОВЫЙ ГРАДИЕНТ ПО КРАЯМ ===== */
+  /* ===== НЕОНОВОЕ ОБЛАКО ПО КРАЯМ ===== */
   .lightbox-trace {
     position: absolute;
     top: 0;
@@ -447,28 +451,50 @@
     z-index: 1;
     pointer-events: none;
     display: block;
+    filter: blur(2px);   /* лёгкая дымка для мягкости */
   }
   .lightbox-trace path {
     fill: none;
-    stroke: url(#neonGradient);
     stroke-linecap: round;
     stroke-linejoin: round;
-    filter: drop-shadow(0 0 4px #ff6bb0)
-            drop-shadow(0 0 12px #ff2e91)
-            drop-shadow(0 0 26px rgba(255, 46, 145, 0.9));
     opacity: 0;
+    mix-blend-mode: screen;
+  }
+  /* три слоя разной толщины для "облака" */
+  .lightbox-trace path.trace-thin {
+    stroke: url(#neonGradient);
+    stroke-width: 3;
+    filter: blur(1px);
+  }
+  .lightbox-trace path.trace-mid {
+    stroke: url(#neonGradient);
+    stroke-width: 14;
+    filter: blur(6px);
+    opacity: 0.65;
+  }
+  .lightbox-trace path.trace-fat {
+    stroke: url(#neonGradient);
+    stroke-width: 32;
+    filter: blur(18px);
+    opacity: 0.45;
   }
   .lightbox.open .lightbox-trace path {
     opacity: 1;
-    animation: traceRun 4s ease-out forwards, neonPulse 2.5s ease-in-out 4s infinite;
   }
-  @keyframes neonPulse {
-    0%, 100% { filter: drop-shadow(0 0 4px #ff6bb0) drop-shadow(0 0 12px #ff2e91) drop-shadow(0 0 26px rgba(255, 46, 145, 0.9)); }
-    50%      { filter: drop-shadow(0 0 8px #ff6bb0) drop-shadow(0 0 22px #ff2e91) drop-shadow(0 0 48px rgba(255, 46, 145, 1)); }
+  .lightbox.open .lightbox-trace path.trace-mid { opacity: 0.65; }
+  .lightbox.open .lightbox-trace path.trace-fat { opacity: 0.45; }
+
+  /* анимация проявления для всех слоёв */
+  .lightbox.open .lightbox-trace path {
+    animation: traceRun 4s ease-out forwards, cloudPulse 3s ease-in-out 4s infinite;
   }
   @keyframes traceRun {
     0%   { stroke-dashoffset: var(--len, 4000); }
     100% { stroke-dashoffset: 0; }
+  }
+  @keyframes cloudPulse {
+    0%, 100% { filter: blur(6px); }
+    50%      { filter: blur(10px); }
   }
 
   .lightbox-img-wrap {
@@ -622,7 +648,7 @@
   <div class="lightbox" id="lightbox">
     <svg class="lightbox-trace" id="lightboxTrace">
       <defs>
-        <linearGradient id="neonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="neonGradient" gradientUnits="userSpaceOnUse" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%"   stop-color="#ffd6e8"/>
           <stop offset="25%"  stop-color="#ff6bb0"/>
           <stop offset="50%"  stop-color="#ff2e91"/>
@@ -630,7 +656,9 @@
           <stop offset="100%" stop-color="#ffd6e8"/>
         </linearGradient>
       </defs>
-      <path id="tracePath" d=""></path>
+      <path class="trace-fat"  id="tracePathFat"  d=""></path>
+      <path class="trace-mid"  id="tracePathMid"  d=""></path>
+      <path class="trace-thin" id="tracePathThin" d=""></path>
     </svg>
     <div class="lightbox-img-wrap">
       <div class="lightbox-num" id="lightboxNum">#1</div>
@@ -917,7 +945,8 @@ async function loadWeGallery() {
       const img = document.createElement('img');
       img.src = path + '?t=' + Date.now();
       img.alt = 'Это мы';
-      img.loading = 'lazy';
+      img.loading = 'eager';                  /* сразу грузим, чтобы превью не было пустым */
+      img.decoding = 'async';
       img.onerror = () => { card.style.display = 'none'; };
       card.appendChild(img);
 
@@ -932,16 +961,17 @@ async function loadWeGallery() {
   }
 }
 
-/* ===== ЛАЙТБОКС + НЕОНОВЫЙ ГРАДИЕНТ ===== */
+/* ===== ЛАЙТБОКС + НЕОНОВОЕ ОБЛАКО ===== */
 const lightbox      = document.getElementById('lightbox');
 const lightboxImg   = document.getElementById('lightboxImg');
 const lightboxNum   = document.getElementById('lightboxNum');
 const lightboxClose = document.getElementById('lightboxClose');
-const tracePath     = document.getElementById('tracePath');
+const tracePathThin = document.getElementById('tracePathThin');
+const tracePathMid  = document.getElementById('tracePathMid');
+const tracePathFat  = document.getElementById('tracePathFat');
 const traceSvg      = document.getElementById('lightboxTrace');
 
 function buildHeartTrace() {
-  // Прямоугольный контур по краям экрана — без сердца
   const w = window.innerWidth;
   const h = window.innerHeight;
 
@@ -950,8 +980,14 @@ function buildHeartTrace() {
   traceSvg.setAttribute('width', w);
   traceSvg.setAttribute('height', h);
 
-  const m = 10;
-  // Путь: идём по периметру — левый верх → правый верх → правый низ → левый низ → замыкаем
+  // градиент привязываем к реальному размеру экрана
+  const grad = document.getElementById('neonGradient');
+  grad.setAttribute('x1', 0);
+  grad.setAttribute('y1', 0);
+  grad.setAttribute('x2', w);
+  grad.setAttribute('y2', h);
+
+  const m = 12;
   const d = `
     M ${m} ${m}
     L ${w - m} ${m}
@@ -960,20 +996,19 @@ function buildHeartTrace() {
     Z
   `;
 
-  tracePath.setAttribute('d', d);
-
-  try {
-    const len = tracePath.getTotalLength();
-    tracePath.style.setProperty('--len', len);
-    tracePath.style.strokeDasharray = len;
-    tracePath.style.strokeDashoffset = len;
-    tracePath.style.strokeWidth = Math.max(2, Math.min(4, w / 400));
-  } catch (e) {
-    tracePath.style.setProperty('--len', 4000);
-    tracePath.style.strokeDasharray = 4000;
-    tracePath.style.strokeDashoffset = 4000;
-    tracePath.style.strokeWidth = 3;
-  }
+  [tracePathThin, tracePathMid, tracePathFat].forEach(p => {
+    p.setAttribute('d', d);
+    try {
+      const len = p.getTotalLength();
+      p.style.setProperty('--len', len);
+      p.style.strokeDasharray = len;
+      p.style.strokeDashoffset = len;
+    } catch (e) {
+      p.style.setProperty('--len', 4000);
+      p.style.strokeDasharray = 4000;
+      p.style.strokeDashoffset = 4000;
+    }
+  });
 }
 
 function openLightbox(src, id) {
@@ -986,9 +1021,11 @@ function openLightbox(src, id) {
   }
   buildHeartTrace();
   // перезапускаем анимацию
-  tracePath.style.animation = 'none';
-  void tracePath.offsetWidth;
-  tracePath.style.animation = '';
+  [tracePathThin, tracePathMid, tracePathFat].forEach(p => {
+    p.style.animation = 'none';
+    void p.offsetWidth;
+    p.style.animation = '';
+  });
   lightbox.classList.add('open');
   document.body.style.overflow = 'hidden';
   requestAnimationFrame(() => buildHeartTrace());
